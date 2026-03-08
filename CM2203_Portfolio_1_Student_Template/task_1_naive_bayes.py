@@ -20,8 +20,7 @@ class NaiveBayes:
     def __init__(self, class_info: tuple[str, list[str]], feature_info: dict[str, list[str]]):
         self.class_info = class_info
         self.feature_info = feature_info
-        print(class_info,"class info")
-        print(feature_info,"feature info")
+
         # You can add further variables/attributes/etc. here
         
     # This function trains the model, aka calculates all the necessary probabilities that a naive Bayes model needs.
@@ -31,14 +30,39 @@ class NaiveBayes:
     # At input, train_model takes:
     # - training_data - a pandas DataFrame that contains all the attribute values and class value for a given entry
     def train_model(self, training_data: pd.DataFrame):
-        print("Do something!")
+        # dictionary to store class labels along with class probabilites 
+        class_probabilities={}
+        # dictionary to store each record assocaited with each class label
+        class_dataframes={}
+        
+        class_occurence={}
 
-        for x in self.class_info[1]:
-            print (x)
-        print("hi")
-        for y in self.feature_info:
-            print(y)
-        print("bye")
+        for classlabel in self.class_info[1]:
+            #retreives the number of records associated with a given class label
+            class_occurence[classlabel]=training_data["Class"].value_counts().get(classlabel,0)
+
+            # stores the class proability of a given class as a value associated with a class label in a dictionary  
+            class_probabilities[classlabel]=(float((class_occurence[classlabel]/training_data.shape)[0]))
+            # stores each record associated with a giveen class label in a dictionary
+            class_dataframes[classlabel]=training_data[training_data["Class"]==classlabel]
+
+        
+        for classlabel,dataframe in class_dataframes.items():
+            for attributeLabel,attributeValue in self.feature_info.items():    
+                print(classlabel)
+                print(attributeLabel)
+                print(attributeValue)
+                # attribute_subset=(dataframe[attributeLabel])
+
+                for value in attributeValue:
+                    print(value)
+                    print(dataframe[attributeLabel].value_counts().get(value,0))
+                    print(dataframe[attributeLabel].value_counts().get(value,0)/dataframe.shape[0],"p")
+
+       
+
+
+
         #have to use self.class_info to get probability for every class 
         # have to use self.feature_info to get probability for every attribute given a class label
 

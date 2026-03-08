@@ -44,7 +44,7 @@ class Task_1_Testing(unittest.TestCase):
     # The function simply checks one possible behaviour, and there are many more possible. More than that
     # is also supporting markers. Feel free to expand on these tests for your own purposes. This area is not marked
     # or checked.
-    #
+    
 
     def test1_retrieve_conditional_probability(self):
         nb = NaiveBayes(class_info, feature_info)
