@@ -36,6 +36,8 @@ class NaiveBayes:
         class_dataframes={}
         
         class_occurence={}
+        
+        attribute_probabilities={}
 
         for classlabel in self.class_info[1]:
             #retreives the number of records associated with a given class label
@@ -49,22 +51,17 @@ class NaiveBayes:
         
         for classlabel,dataframe in class_dataframes.items():
             for attributeLabel,attributeValue in self.feature_info.items():    
-                print(classlabel)
-                print(attributeLabel)
-                print(attributeValue)
-                # attribute_subset=(dataframe[attributeLabel])
+                
+                try:
+                    attribute_probabilities[classlabel][attributeLabel]=[]
+                except:
+                    attribute_probabilities[classlabel]={attributeLabel:[]}
 
                 for value in attributeValue:
-                    print(value)
-                    print(dataframe[attributeLabel].value_counts().get(value,0))
-                    print(dataframe[attributeLabel].value_counts().get(value,0)/dataframe.shape[0],"p")
-
-       
-
-
-
-        #have to use self.class_info to get probability for every class 
-        # have to use self.feature_info to get probability for every attribute given a class label
+                    curr_attr_prob=float(dataframe[attributeLabel].value_counts().get(value,0)/dataframe.shape[0])
+                    # attribute_probabilities[attributeLabel].append(float(dataframe[attributeLabel].value_counts().get(value,0)/dataframe.shape[0]))
+                    attribute_probabilities[classlabel][attributeLabel].append(curr_attr_prob)
+  
 
         
     # This function predicts the classes for entries in the training_data and produces an extended data frame.
