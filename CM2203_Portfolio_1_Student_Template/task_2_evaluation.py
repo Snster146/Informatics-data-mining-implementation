@@ -322,9 +322,25 @@ def compute_standard_accuracy(matrix: pd.DataFrame) -> float:
 
     return tps_occurence/total_occurence
 
-
+# tp+tn/tp+fn+fp+fn
 def compute_balanced_accuracy(matrix: pd.DataFrame) -> float:
-    return -1
+    # retreivce all fn , tp and fp values and store them in respective arrays 
+    attr_FNs=[int(x) for x in list(compute_FNs(matrix).values())]
+    attr_TPs=[int(x) for x in list(compute_TPs(matrix).values())]
+    attr_FPs=[int(x) for x in list(compute_FPs(matrix).values())]
+    # define number of occurences as the sum of each element in each array for tp,fp and fn respectively
+    tp_occurence=sum(attr_TPs)
+    fp_occurence=sum(attr_FPs)
+    fn_occurence=sum(attr_FNs)
+
+    tp_fn_occurence=tp_occurence+fn_occurence
+
+    tn_occurence=tp_occurence+fp_occurence+fn_occurence-tp_fn_occurence
+
+    correct_predictions=(tp_occurence+tn_occurence)
+    all_predictions=(tp_occurence+tn_occurence+fp_occurence+fn_occurence)
+
+    return correct_predictions/all_predictions
 
 
 # In this function you are expected to compute precision, recall, f-measure and accuracy of your classifier using
