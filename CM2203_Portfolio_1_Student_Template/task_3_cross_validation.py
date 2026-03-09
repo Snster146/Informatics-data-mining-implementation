@@ -19,8 +19,25 @@ from task_1_naive_bayes import *
 #                     as in training_data.
 def partition_data(training_data: pd.DataFrame, f: int) -> list[pd.DataFrame]:
 
-    partition_list = []
-    # Compute, compute, compute!
+    if (f<=0):
+        return "f value must be an integer >0"
+    elif (f>training_data.shape[0]):
+        return "f value cannot be greater than size of the training data"
+    
+    trainingDataSize=training_data.shape[0]
+    
+    partitionSize=trainingDataSize//f
+
+    partitionRemainder = trainingDataSize%f
+    
+    partition_list=[]
+
+    start=0
+    for i in range (f):
+        size =partitionSize+(1 if i<partitionRemainder else 0)
+        partition_list.append(training_data.iloc[start:start+size])
+        start+=size
+
     return partition_list
 
 

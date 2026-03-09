@@ -322,7 +322,6 @@ def compute_standard_accuracy(matrix: pd.DataFrame) -> float:
 
     return tps_occurence/total_occurence
 
-# tp+tn/tp+fn+fp+fn
 def compute_balanced_accuracy(matrix: pd.DataFrame) -> float:
     # retreivce all fn , tp and fp values and store them in respective arrays 
     attr_FNs=[int(x) for x in list(compute_FNs(matrix).values())]
