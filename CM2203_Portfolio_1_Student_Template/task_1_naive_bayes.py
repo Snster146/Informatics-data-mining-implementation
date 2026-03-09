@@ -30,6 +30,8 @@ class NaiveBayes:
         
         self.attribute_probabilities={}
 
+        self.trainingTookPlace=False
+
         # You can add further variables/attributes/etc. here
         
     # This function trains the model, aka calculates all the necessary probabilities that a naive Bayes model needs.
@@ -64,7 +66,7 @@ class NaiveBayes:
                     # attribute_probabilities[attributeLabel].append(float(dataframe[attributeLabel].value_counts().get(value,0)/dataframe.shape[0]))
                     self.attribute_probabilities[classlabel][attributeLabel].append(curr_attr_prob)
   
-
+        self.trainingTookPlace=True
         
     # This function predicts the classes for entries in the training_data and produces an extended data frame.
     # At input, it takes:
@@ -77,11 +79,7 @@ class NaiveBayes:
         classified_data = None
         testDataProbabilities={}
 
-# loop through eveyr class label 
-# for every class label loop through the attributes and their values and work out the probability P(C|A,,,,,)
-# going to have to store each probability for each class for example if giveBirth = yes store that to work out probability
         for classLabel, classProb in self.class_probabilities.items():
-            # print(classLabel," ",classProb)
             testDataProbabilities[classLabel]=[]
 
             for attributeLabel,attributeValue in self.feature_info.items():  
@@ -89,10 +87,7 @@ class NaiveBayes:
                     attributeValueIndex=attributeValue.index(value)
 
                     if(testing_data[attributeLabel].value_counts().get(value,0)>0):
-                        # print("testing data contains "+attributeLabel+" with value "+value+" probability =")
-                        # print(self.attribute_probabilities[classLabel][attributeLabel][attributeValueIndex])
                         testDataProbabilities[classLabel].append(self.attribute_probabilities[classLabel][attributeLabel][attributeValueIndex])
-                    # print(value,"\n")
             
         for classLabel, attr_prob in testDataProbabilities.items():
             classProb=1
@@ -107,7 +102,6 @@ class NaiveBayes:
 
         classified_data=testing_data
         classified_data["PredictedClass"]=predictedClass
-        print(classified_data)
 
         return classified_data
 
@@ -119,7 +113,9 @@ class NaiveBayes:
     # The function outputs:
     # - probability - float representing the probability of the given class value
     def retrieve_class_probability(self, class_value: str) -> float:
-        return -1
+        if not(self.trainingTookPlace):
+            return 0;
+        return self.class_probabilities[class_value]
 
     # The function returns the conditional probably of a feature value assuming a given class value. You can assume
     # that this function simply retrieves the desired probability after training rather than
@@ -132,4 +128,13 @@ class NaiveBayes:
     # - probability - float representing the calculated conditional probability
     #
     def retrieve_conditional_probability(self, class_value: str, feature_name: str, feature_value: str) -> float:
-        return -1
+        
+        if not (self.trainingTookPlace):
+            return 0;
+        else:
+            featureValueIndex=self.feature_info[feature_name].index(feature_value)
+            featureProbabilities=self.attribute_probabilities[class_value][feature_name]
+            featureValueProbability=featureProbabilities[featureValueIndex]
+
+
+            return featureValueProbability
