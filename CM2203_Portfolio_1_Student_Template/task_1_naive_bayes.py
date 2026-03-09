@@ -21,6 +21,15 @@ class NaiveBayes:
         self.class_info = class_info
         self.feature_info = feature_info
 
+        # dictionary to store class labels along with class probabilites 
+        self.class_probabilities={}
+        # dictionary to store each record assocaited with each class label
+        self.class_dataframes={}
+        
+        self.class_occurence={}
+        
+        self.attribute_probabilities={}
+
         # You can add further variables/attributes/etc. here
         
     # This function trains the model, aka calculates all the necessary probabilities that a naive Bayes model needs.
@@ -30,37 +39,30 @@ class NaiveBayes:
     # At input, train_model takes:
     # - training_data - a pandas DataFrame that contains all the attribute values and class value for a given entry
     def train_model(self, training_data: pd.DataFrame):
-        # dictionary to store class labels along with class probabilites 
-        class_probabilities={}
-        # dictionary to store each record assocaited with each class label
-        class_dataframes={}
         
-        class_occurence={}
-        
-        attribute_probabilities={}
 
         for classlabel in self.class_info[1]:
             #retreives the number of records associated with a given class label
-            class_occurence[classlabel]=training_data["Class"].value_counts().get(classlabel,0)
+            self.class_occurence[classlabel]=training_data["Class"].value_counts().get(classlabel,0)
 
             # stores the class proability of a given class as a value associated with a class label in a dictionary  
-            class_probabilities[classlabel]=(float((class_occurence[classlabel]/training_data.shape)[0]))
+            self.class_probabilities[classlabel]=(float((self.class_occurence[classlabel]/training_data.shape)[0]))
             # stores each record associated with a giveen class label in a dictionary
-            class_dataframes[classlabel]=training_data[training_data["Class"]==classlabel]
+            self.class_dataframes[classlabel]=training_data[training_data["Class"]==classlabel]
 
         
-        for classlabel,dataframe in class_dataframes.items():
+        for classlabel,dataframe in self.class_dataframes.items():
             for attributeLabel,attributeValue in self.feature_info.items():    
                 
                 try:
-                    attribute_probabilities[classlabel][attributeLabel]=[]
+                    self.attribute_probabilities[classlabel][attributeLabel]=[]
                 except:
-                    attribute_probabilities[classlabel]={attributeLabel:[]}
+                    self.attribute_probabilities[classlabel]={attributeLabel:[]}
 
                 for value in attributeValue:
                     curr_attr_prob=float(dataframe[attributeLabel].value_counts().get(value,0)/dataframe.shape[0])
                     # attribute_probabilities[attributeLabel].append(float(dataframe[attributeLabel].value_counts().get(value,0)/dataframe.shape[0]))
-                    attribute_probabilities[classlabel][attributeLabel].append(curr_attr_prob)
+                    self.attribute_probabilities[classlabel][attributeLabel].append(curr_attr_prob)
   
 
         
@@ -73,6 +75,40 @@ class NaiveBayes:
     #                   the chosen class is the one that appears earlier alphabetically.
     def predict(self, testing_data: pd.DataFrame) -> pd.DataFrame:
         classified_data = None
+        testDataProbabilities={}
+
+# loop through eveyr class label 
+# for every class label loop through the attributes and their values and work out the probability P(C|A,,,,,)
+# going to have to store each probability for each class for example if giveBirth = yes store that to work out probability
+        for classLabel, classProb in self.class_probabilities.items():
+            # print(classLabel," ",classProb)
+            testDataProbabilities[classLabel]=[]
+
+            for attributeLabel,attributeValue in self.feature_info.items():  
+                for value in attributeValue:  
+                    attributeValueIndex=attributeValue.index(value)
+
+                    if(testing_data[attributeLabel].value_counts().get(value,0)>0):
+                        # print("testing data contains "+attributeLabel+" with value "+value+" probability =")
+                        # print(self.attribute_probabilities[classLabel][attributeLabel][attributeValueIndex])
+                        testDataProbabilities[classLabel].append(self.attribute_probabilities[classLabel][attributeLabel][attributeValueIndex])
+                    # print(value,"\n")
+            
+        for classLabel, attr_prob in testDataProbabilities.items():
+            classProb=1
+
+            attr_prob.append(self.class_probabilities[classLabel])
+
+            for prob in attr_prob:
+                classProb=classProb*prob
+            self.class_probabilities[classLabel]=classProb
+
+        predictedClass=max(self.class_probabilities,key=self.class_probabilities.get)
+
+        classified_data=testing_data
+        classified_data["PredictedClass"]=predictedClass
+        print(classified_data)
+
         return classified_data
 
     # The function returns the probability of a given class value. You can assume
