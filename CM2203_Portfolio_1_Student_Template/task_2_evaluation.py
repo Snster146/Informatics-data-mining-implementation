@@ -194,7 +194,6 @@ def compute_weighted_precision(matrix: pd.DataFrame) -> float:
 # variable to store weighted precision which will be incremented whilst iterating through every attribute
     weighted_precision=0
 
-    # array to store attribute labels which we will iterate through
     attributeLabels=list(matrix.columns)
 # dictionary to store attribute labels and their associated number of occurences
     attributeOccurences={}
@@ -217,7 +216,8 @@ def compute_weighted_precision(matrix: pd.DataFrame) -> float:
         weighted_precision+=attributeOccurences[attributeLabel]*value
 # stores total number of occurences , which will be used as the denomenator for weighted precision 
     numOccurences=(sum(list(attributeOccurences.values())))
-
+# calculates weighted precision as the sum of the product of each attributes precision and its occurence 
+# divided by the total number of occurences
     weighted_precision=weighted_precision/numOccurences
 
     return weighted_precision
@@ -225,17 +225,17 @@ def compute_weighted_precision(matrix: pd.DataFrame) -> float:
 
 
 def compute_weighted_recall(matrix: pd.DataFrame) -> float:
+# stores dictionary of attribute labels along with associated FNs,FPs and TPs respectively
     attr_FNs=compute_FNs(matrix)
     attr_FPs=compute_FPs(matrix)
     attr_TPs=compute_TPs(matrix)
-
+# variable to store weighted recall which will be incremented iteratively once the recall of individual attributes has been computed
     weighted_recall=0
-
 
     attributeLabels=list(matrix.columns)
 # dictionary to store attribute labels and their associated number of occurences
     attributeOccurences={}
-    # dictionary to store attribute labels and their associated precisions (P=TP/TP+FP)
+    # dictionary to store attribute labels and their associated recall values (R=TP/TP+FN)
     attributeRecalls={}
 
     for attributeLable in attributeLabels:
@@ -243,28 +243,61 @@ def compute_weighted_recall(matrix: pd.DataFrame) -> float:
         attrOccurence=int(attr_TPs[attributeLable] +attr_FNs[attributeLable])
         # store occurence of current attribute in a dictionary
         attributeOccurences[attributeLable]=attrOccurence
-        # compute the binary precision of the current attribute 
+        # compute the binary recall of the current attribute 
         curr_attr_recall=compute_binary_recall(fp=int(attr_FPs[attributeLable]),tp=int(attr_TPs[attributeLable]),fn=int(attr_FNs[attributeLable]))
-        # store binary precision of current attribute in dictionary
+        # store binary recall of current attribute in dictionary
         attributeRecalls[attributeLable]=curr_attr_recall
 
-    # this loop calculates the numerator of the equation for weighted precision by summing 
-# the product of each attribute precision and its occurence
+    # this loop calculates the numerator of the equation for weighted recall by summing 
+# the product of each attributes recall value and its occurence
     for attributeLabel , value in attributeRecalls.items(): 
         weighted_recall+=attributeOccurences[attributeLabel]*value
-# stores total number of occurences , which will be used as the denomenator for weighted precision 
+# stores total number of occurences , which will be used as the denomenator for weighted recall 
     numOccurences=(sum(list(attributeOccurences.values())))
-
+# calculates weighted recall as the sum of the product of each attributes recall and its occurence 
+# divided by the total number of occurences
     weighted_recall=weighted_recall/numOccurences
 
     return weighted_recall
 
 
-    return -1
-
 
 def compute_weighted_f_measure(matrix: pd.DataFrame) -> float:
-    return -1
+    # stores dictionary of attribute labels along with associated FNs,FPs and TPs respectively
+    attr_FNs=compute_FNs(matrix)
+    attr_FPs=compute_FPs(matrix)
+    attr_TPs=compute_TPs(matrix)
+# variable to store weighted f-measure which will be incremented iteratively once the f-measure of individual attributes has been computed
+    weighted_fmeasure=0
+
+    attributeLabels=list(matrix.columns)
+# dictionary to store attribute labels and their associated number of occurences
+    attributeOccurences={}
+    # dictionary to store attribute labels and their associated fmeasure values (F=2.P.R/P+R)
+    attributeFmeasure={}
+
+    for attributeLable in attributeLabels:
+        # occurence is calculated as TP + FN, 
+        attrOccurence=int(attr_TPs[attributeLable] +attr_FNs[attributeLable])
+        # store occurence of current attribute in a dictionary
+        attributeOccurences[attributeLable]=attrOccurence
+        # compute the binary fmeasure of the current attribute 
+        curr_attr_recall=compute_binary_f_measure(fp=int(attr_FPs[attributeLable]),tp=int(attr_TPs[attributeLable]),fn=int(attr_FNs[attributeLable]))
+        # store binary f-measure of current attribute in dictionary
+        attributeFmeasure[attributeLable]=curr_attr_recall
+
+    # this loop calculates the numerator of the equation for weighted f-measure by summing 
+# the product of each attributes f-measure value and its occurence
+    for attributeLabel , value in attributeFmeasure.items(): 
+        weighted_fmeasure+=attributeOccurences[attributeLabel]*value
+# stores total number of occurences , which will be used as the denomenator for weighted f-measure 
+    numOccurences=(sum(list(attributeOccurences.values())))
+# calculates weighted f-measure as the sum of the product of each attributes recall and its occurence 
+# divided by the total number of occurences
+    weighted_fmeasure=weighted_fmeasure/numOccurences
+
+    return weighted_fmeasure
+    
 
 
 # These functions compute the standard and balanced multiclass accuracies based on the offered confusion matrix.
@@ -277,9 +310,17 @@ def compute_weighted_f_measure(matrix: pd.DataFrame) -> float:
 # - standard/balanced multiclass accuracy - appropriate evaluation measures created using the
 #                                           standard/balanced approach.
 
-
 def compute_standard_accuracy(matrix: pd.DataFrame) -> float:
-    return -1
+# stores dictionary of attribute labels along with associated FNs,FPs and TPs respectively
+    attr_FNs=[int(x) for x in list(compute_FNs(matrix).values())]
+    attr_TPs=[int(x) for x in list(compute_TPs(matrix).values())]
+
+    tps_occurence=sum(attr_TPs)
+    fns_occurence=sum(attr_FNs)
+    # occurence is calculated as TP + FN, 
+    total_occurence=tps_occurence+fns_occurence
+
+    return tps_occurence/total_occurence
 
 
 def compute_balanced_accuracy(matrix: pd.DataFrame) -> float:
