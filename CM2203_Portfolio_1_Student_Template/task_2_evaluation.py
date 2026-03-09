@@ -30,13 +30,18 @@ import pandas as pd
 def confusion_matrix(actual_class: pd.Series, predicted_class: pd.Series, class_values: list[str]) -> pd.DataFrame:
     matrix = pd.DataFrame(0, index=class_values, columns=class_values)
 
-    # WE WILL IMPLEMENT THIS IN CLASS, DON'T WORRY!
-
+    for i in range(len(actual_class)):
+        try:
+            actual = actual_class.iloc[i]
+            predicted = predicted_class.iloc[i]
+        except:
+            print("Dataset contains a class not in the classification scheme!")
+        value = matrix.loc[predicted, actual]
+        matrix.loc[predicted, actual] = value + 1
     return matrix
 
 
 # These functions compute per-class true positives and false positives/negatives based on the provided confusion matrix.
-# WE WILL IMPLEMENT THEM IN CLASS, DON'T WORRY!
 #
 # As input, these functions take:
 # - matrix - a data frame representing the confusion matrix computed based on the offered series of actual
@@ -48,18 +53,39 @@ def confusion_matrix(actual_class: pd.Series, predicted_class: pd.Series, class_
 #                 false negative values for that class.
 
 def compute_TPs(matrix: pd.DataFrame) -> dict[str, int]:
-    # WE WILL IMPLEMENT THIS IN CLASS, DON'T WORRY!
-    return {}
+    class_vals = matrix.columns
+    tps = {}
+    for class_v in class_vals:
+    # TPs is simply about retrieving values from the diagonal
+    # .loc retrieves values via names, not indices
+        tps[class_v] = matrix.loc[class_v, class_v]
+    return tps
 
 
 def compute_FPs(matrix: pd.DataFrame) -> dict[str, int]:
-    # WE WILL IMPLEMENT THIS IN CLASS, DON'T WORRY!
-    return {}
+    class_vals = matrix.columns
+    fps = {}
+    for class_1 in class_vals:
+        sum_vals = 0
+        for class_2 in class_vals:
+        # For FPs, we need to add up values predicted to belong to that class, but not belonging to it in reality
+            if class_1 != class_2:
+                sum_vals += matrix.loc[class_1, class_2]
+        fps[class_1] = sum_vals
+    return fps
 
 
 def compute_FNs(matrix: pd.DataFrame) -> dict[str, int]:
-    # WE WILL IMPLEMENT THIS IN CLASS, DON'T WORRY!
-    return {}
+    class_vals = matrix.columns
+    fns = {}
+    for class_1 in class_vals:
+        sum_vals = 0
+        # For FNs, we need to add up values not predicted to belong to that class, but belonging to it in reality
+        for class_2 in class_vals:
+            if class_1 != class_2:
+                sum_vals += matrix.loc[class_2, class_1]
+        fns[class_1] = sum_vals
+    return fns
 
 
 # These functions compute the binary measures based on the provided values. Not all measures use all the values.
@@ -71,17 +97,17 @@ def compute_FNs(matrix: pd.DataFrame) -> dict[str, int]:
 # - binary precision/recall/f-measure - appropriate evaluation measure created using the binary approach.
 
 def compute_binary_precision(tp: int, fp: int, fn: int) -> float:
-    return -1
+    return tp/(tp+fp)
 
 
 def compute_binary_recall(tp: int, fp: int, fn: int) -> float:
-    return -1
+    return tp/(tp+fn)
 
 
 def compute_binary_f_measure(tp: int, fp: int, fn: int) -> float:
-    return -1
-
-
+    p=compute_binary_precision(tp,fp,fn)
+    r=compute_binary_recall(tp,fp,fn)
+    return 2*p*r/(p+r)
 # These functions compute the macro precision, macro recall, macro f-measure, based on the offered confusion matrix.
 # You are expected to use appropriate binary counterparts when needed (binary recall for macro recall, binary precision
 # for macro precision, binary f-measure for macro f-measure) and the functions for computing tps/fps/fns as needed.
@@ -93,15 +119,59 @@ def compute_binary_f_measure(tp: int, fp: int, fn: int) -> float:
 # - macro precision/recall/f-measure - appropriate evaluation measures created using the macro average approach.
 
 def compute_macro_precision(matrix: pd.DataFrame) -> float:
-    return -1
+    attr_FNs=compute_FNs(matrix)
+    attr_FPs=compute_FPs(matrix)
+    attr_TPs=compute_TPs(matrix)
+
+    binaryPrecisions=[]
+    attributeNames=list(matrix.columns)
+    for attr_name in attributeNames:
+        currAttrFN=attr_FNs[attr_name]
+        currAttrFP=attr_FPs[attr_name]
+        currAttrTP=attr_TPs[attr_name]
+        attrPrecision=float(compute_binary_precision(fp=currAttrFP,fn=currAttrFN,tp=currAttrTP))
+        binaryPrecisions.append(attrPrecision)
+
+    
+    return sum(binaryPrecisions)/len(binaryPrecisions)
 
 
 def compute_macro_recall(matrix: pd.DataFrame) -> float:
-    return -1
+    attr_FNs=compute_FNs(matrix)
+    attr_FPs=compute_FPs(matrix)
+    attr_TPs=compute_TPs(matrix)
+
+    binaryRecalls=[]
+    attributeNames=list(matrix.columns)
+    for attr_name in attributeNames:
+        currAttrFN=attr_FNs[attr_name]
+        currAttrFP=attr_FPs[attr_name]
+        currAttrTP=attr_TPs[attr_name]
+        attrRecall=float(compute_binary_recall(fp=currAttrFP,fn=currAttrFN,tp=currAttrTP))
+        binaryRecalls.append(attrRecall)
+
+    
+    return sum(binaryRecalls)/len(binaryRecalls)
+
+    
 
 
 def compute_macro_f_measure(matrix: pd.DataFrame) -> float:
-    return -1
+    attr_FNs=compute_FNs(matrix)
+    attr_FPs=compute_FPs(matrix)
+    attr_TPs=compute_TPs(matrix)
+
+    binaryFMeasures=[]
+    attributeNames=list(matrix.columns)
+    for attr_name in attributeNames:
+        currAttrFN=attr_FNs[attr_name]
+        currAttrFP=attr_FPs[attr_name]
+        currAttrTP=attr_TPs[attr_name]
+        attrFMeasure=float(compute_binary_f_measure(fp=currAttrFP,fn=currAttrFN,tp=currAttrTP))
+        binaryFMeasures.append(attrFMeasure)
+
+    
+    return sum(binaryFMeasures)/len(binaryFMeasures)
 
 
 # These functions compute the weighted precision, macro recall, macro f-measure, based on the offered confusion matrix.
@@ -116,10 +186,46 @@ def compute_macro_f_measure(matrix: pd.DataFrame) -> float:
 # - weighted precision/recall/f-measure - appropriate evaluation measures created using the weighted average approach.
 
 def compute_weighted_precision(matrix: pd.DataFrame) -> float:
-    return -1
+#stores dictionary of attribute labels associated with FNs, FPs and Tps respectively  
+    attr_FNs=compute_FNs(matrix)
+    attr_FPs=compute_FPs(matrix)
+    attr_TPs=compute_TPs(matrix)
+
+# variable to store weighted precision which will be incremented whilst iterating through every attribute
+    weighted_precision=0
+
+    # array to store attribute labels which we will iterate through
+    attributeLabels=list(matrix.columns)
+# dictionary to store attribute labels and their associated number of occurences
+    attributeOccurences={}
+    # dictionary to store attribute labels and their associated precisions (P=TP/TP+FP)
+    attributePrecisions={}
+    
+
+    for attributeLable in attributeLabels:
+        # occurence is calculated as TP + FN, 
+        attrOccurence=int(attr_TPs[attributeLable] +attr_FNs[attributeLable])
+        # store occurence of current attribute in a dictionary
+        attributeOccurences[attributeLable]=attrOccurence
+        # compute the binary precision of the current attribute 
+        curr_attr_precision=compute_binary_precision(fp=int(attr_FPs[attributeLable]),tp=int(attr_TPs[attributeLable]),fn=int(attr_FNs[attributeLable]))
+        # store binary precision of current attribute in dictionary
+        attributePrecisions[attributeLable]=curr_attr_precision
+# this loop calculates the numerator of the equation for weighted precision by summing 
+# the product of each attribute precision and its occurence
+    for attributeLabel , value in attributePrecisions.items(): 
+        weighted_precision+=attributeOccurences[attributeLabel]*value
+# stores total number of occurences , which will be used as the denomenator for weighted precision 
+    numOccurences=(sum(list(attributeOccurences.values())))
+
+    weighted_precision=weighted_precision/numOccurences
+
+    return weighted_precision
+    
 
 
 def compute_weighted_recall(matrix: pd.DataFrame) -> float:
+
     return -1
 
 
