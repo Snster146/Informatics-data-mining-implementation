@@ -225,6 +225,40 @@ def compute_weighted_precision(matrix: pd.DataFrame) -> float:
 
 
 def compute_weighted_recall(matrix: pd.DataFrame) -> float:
+    attr_FNs=compute_FNs(matrix)
+    attr_FPs=compute_FPs(matrix)
+    attr_TPs=compute_TPs(matrix)
+
+    weighted_recall=0
+
+
+    attributeLabels=list(matrix.columns)
+# dictionary to store attribute labels and their associated number of occurences
+    attributeOccurences={}
+    # dictionary to store attribute labels and their associated precisions (P=TP/TP+FP)
+    attributeRecalls={}
+
+    for attributeLable in attributeLabels:
+        # occurence is calculated as TP + FN, 
+        attrOccurence=int(attr_TPs[attributeLable] +attr_FNs[attributeLable])
+        # store occurence of current attribute in a dictionary
+        attributeOccurences[attributeLable]=attrOccurence
+        # compute the binary precision of the current attribute 
+        curr_attr_recall=compute_binary_recall(fp=int(attr_FPs[attributeLable]),tp=int(attr_TPs[attributeLable]),fn=int(attr_FNs[attributeLable]))
+        # store binary precision of current attribute in dictionary
+        attributeRecalls[attributeLable]=curr_attr_recall
+
+    # this loop calculates the numerator of the equation for weighted precision by summing 
+# the product of each attribute precision and its occurence
+    for attributeLabel , value in attributeRecalls.items(): 
+        weighted_recall+=attributeOccurences[attributeLabel]*value
+# stores total number of occurences , which will be used as the denomenator for weighted precision 
+    numOccurences=(sum(list(attributeOccurences.values())))
+
+    weighted_recall=weighted_recall/numOccurences
+
+    return weighted_recall
+
 
     return -1
 
