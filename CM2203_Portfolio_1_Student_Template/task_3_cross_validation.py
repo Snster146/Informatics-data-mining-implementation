@@ -41,6 +41,29 @@ def partition_data(training_data: pd.DataFrame, f: int) -> list[pd.DataFrame]:
 
     return partition_list
 
+mammal_dataset = pd.DataFrame([
+            ['human', 'yes', 'no', 'no', 'yes', 'mammal'],
+            ['python', 'no', 'no', 'no', 'no', 'non-mammal'],
+            ['salmon', 'no', 'no', 'yes', 'no', 'non-mammal'],
+            ['whale', 'yes', 'no', 'yes', 'no', 'mammal'],
+            ['frog', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
+            ['komodo_dragon', 'no', 'no', 'no', 'yes', 'non-mammal'],
+            ['bat', 'yes', 'yes', 'no', 'yes', 'mammal'],
+            ['pigeon', 'no', 'yes', 'no', 'yes', 'non-mammal'],
+            ['cat', 'yes', 'no', 'no', 'yes', 'mammal'],
+            ['leopard_shark', 'yes', 'no', 'yes', 'no', 'non-mammal'],
+            ['turtle', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
+            ['penguin', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
+            ['porcupine', 'yes', 'no', 'no', 'yes', 'mammal'],
+            ['eel', 'no', 'no', 'yes', 'no', 'non-mammal'],
+            ['salamander', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
+            ['gila_monster', 'no', 'no', 'no', 'yes', 'non-mammal'],
+            ['platypus', 'no', 'no', 'no', 'yes', 'mammal'],
+            ['owl', 'no', 'yes', 'no', 'yes', 'non-mammal'],
+            ['dolphin', 'yes', 'no', 'yes', 'no', 'mammal'],
+            ['eagle', 'no', 'yes', 'no', 'yes', 'non-mammal']
+        ], columns=['Name', 'GiveBirth', 'CanFly', 'LiveInWater', 'HaveLegs', 'Class'])
+p=partition_data(mammal_dataset,4)
 
 
 # This function transforms partitions into training and testing data for each cross-validation round (there are
@@ -71,6 +94,8 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
     folds = []
 
     for index, partition in enumerate(partition_list):
+        
+
         # selects the trainingdata as the current partition in the iteration
         trainingdata=partition
 # constructs an array of two dataframes for testingdata, dataframes are all other partitions in the partitionlist that
@@ -78,29 +103,31 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
         testingdata_dataframes=[pd.DataFrame(df) for testindex ,df in enumerate(partition_list) if index != testindex]
     
     # retrevies the columns to use to construct a new dataframe for the testingdata dataframe
-    testingdata_cols = list(testingdata_dataframes[0].columns)
+        testingdata_cols = list(testingdata_dataframes[0].columns)
     # array to store the index values of the testing data
-    testingdata_indexvalues =[]
+        testingdata_indexvalues =[]
     # array to store individual records in the testing data
-    testingdata_list=[]
-
-    for testdata in testingdata_dataframes:
+        testingdata_list=[]
+        roundnumber=index+1
+        roundnumber=str("0"+str(roundnumber))
+        roundnumber=int(roundnumber)
+        for index,testdata in enumerate(testingdata_dataframes):
     
-        for index in testdata.index:
+            for index in testdata.index:
     # appends the index of each record in the testingdata_dataframes which will be used to construct the new testingdata dataframe 
-            testingdata_indexvalues.append(index)
-        for values in testdata.values:
+                testingdata_indexvalues.append(index)
+            for values in testdata.values:
     # appends all values of the individual records to an array which will be used to constuct the new testingdata dataframe
-            testingdata_list.append(list(values))
+                testingdata_list.append(list(values))
 # construct a new dataframe for the testingdata 
-    testingdata_df=pd.DataFrame(data=testingdata_list,index=testingdata_indexvalues,columns=testingdata_cols)
+            testingdata=pd.DataFrame(data=testingdata_list,index=testingdata_indexvalues,columns=testingdata_cols)
      
-    index+=1
-    index=str("0"+str(index))
-    
-    # INCOMPLETE must work on folds 
+# given that we now have the training data and testing data and index must format this to be returned
+            currentfold=tuple([roundnumber,trainingdata,testdata])
+            folds.append(currentfold)
     # Do your thing!
     return folds
+
 
 # This function takes the lists of actual and predicted classes for each round, and produces averaged metrics.
 # Invoke either the Task 2 evaluation here; do not do everything from scratch!
