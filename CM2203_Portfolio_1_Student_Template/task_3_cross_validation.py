@@ -182,7 +182,6 @@ def evaluate_results(actual_class_list: list[pd.Series], predicted_class_list: l
                 'avg_macro_f_measure': avg_macro_f_measure, 'avg_weighted_precision': avg_weighted_precision,
                 'avg_weighted_recall': avg_weighted_recall, 'avg_weighted_f_measure': avg_weighted_f_measure,
                 'avg_standard_accuracy': avg_standard_accuracy, 'avg_balanced_accuracy': avg_balanced_accuracy}
-    print(results)
     
     return results
 
