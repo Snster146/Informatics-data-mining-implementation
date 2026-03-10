@@ -110,7 +110,6 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
         testingdata_list=[]
         roundnumber=index+1
         roundnumber=str("0"+str(roundnumber))
-        roundnumber=int(roundnumber)
         for index,testdata in enumerate(testingdata_dataframes):
     
             for index in testdata.index:
