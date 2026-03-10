@@ -97,16 +97,27 @@ def compute_FNs(matrix: pd.DataFrame) -> dict[str, int]:
 # - binary precision/recall/f-measure - appropriate evaluation measure created using the binary approach.
 
 def compute_binary_precision(tp: int, fp: int, fn: int) -> float:
+# error handling for division by zero error
+    if (tp+fp==0):
+        return 0.0
     return tp/(tp+fp)
 
 
 def compute_binary_recall(tp: int, fp: int, fn: int) -> float:
+#error handling for divison by zero error
+    if (tp+fn==0):
+        return 0.0
     return tp/(tp+fn)
 
 
 def compute_binary_f_measure(tp: int, fp: int, fn: int) -> float:
+
     p=compute_binary_precision(tp,fp,fn)
     r=compute_binary_recall(tp,fp,fn)
+#error handling for division by zero error 
+    if (p+r==0):
+        return 0.0
+
     return 2*p*r/(p+r)
 # These functions compute the macro precision, macro recall, macro f-measure, based on the offered confusion matrix.
 # You are expected to use appropriate binary counterparts when needed (binary recall for macro recall, binary precision
@@ -129,7 +140,10 @@ def compute_macro_precision(matrix: pd.DataFrame) -> float:
         currAttrFN=attr_FNs[attr_name]
         currAttrFP=attr_FPs[attr_name]
         currAttrTP=attr_TPs[attr_name]
+
+                
         attrPrecision=float(compute_binary_precision(fp=currAttrFP,fn=currAttrFN,tp=currAttrTP))
+        
         binaryPrecisions.append(attrPrecision)
 
     

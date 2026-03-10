@@ -41,29 +41,6 @@ def partition_data(training_data: pd.DataFrame, f: int) -> list[pd.DataFrame]:
 
     return partition_list
 
-mammal_dataset = pd.DataFrame([
-            ['human', 'yes', 'no', 'no', 'yes', 'mammal'],
-            ['python', 'no', 'no', 'no', 'no', 'non-mammal'],
-            ['salmon', 'no', 'no', 'yes', 'no', 'non-mammal'],
-            ['whale', 'yes', 'no', 'yes', 'no', 'mammal'],
-            ['frog', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
-            ['komodo_dragon', 'no', 'no', 'no', 'yes', 'non-mammal'],
-            ['bat', 'yes', 'yes', 'no', 'yes', 'mammal'],
-            ['pigeon', 'no', 'yes', 'no', 'yes', 'non-mammal'],
-            ['cat', 'yes', 'no', 'no', 'yes', 'mammal'],
-            ['leopard_shark', 'yes', 'no', 'yes', 'no', 'non-mammal'],
-            ['turtle', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
-            ['penguin', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
-            ['porcupine', 'yes', 'no', 'no', 'yes', 'mammal'],
-            ['eel', 'no', 'no', 'yes', 'no', 'non-mammal'],
-            ['salamander', 'no', 'no', 'sometimes', 'yes', 'non-mammal'],
-            ['gila_monster', 'no', 'no', 'no', 'yes', 'non-mammal'],
-            ['platypus', 'no', 'no', 'no', 'yes', 'mammal'],
-            ['owl', 'no', 'yes', 'no', 'yes', 'non-mammal'],
-            ['dolphin', 'yes', 'no', 'yes', 'no', 'mammal'],
-            ['eagle', 'no', 'yes', 'no', 'yes', 'non-mammal']
-        ], columns=['Name', 'GiveBirth', 'CanFly', 'LiveInWater', 'HaveLegs', 'Class'])
-p=partition_data(mammal_dataset,4)
 
 
 # This function transforms partitions into training and testing data for each cross-validation round (there are
@@ -143,13 +120,71 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
 
 def evaluate_results(actual_class_list: list[pd.Series], predicted_class_list: list[pd.Series],
                      class_values: list[str]) -> dict[str, float]:
-    results = {'avg_macro_precision': 0.0, 'avg_macro_recall': 0.0, 'avg_macro_f_measure': 0.0,
-               'avg_weighted_precision': 0.0, 'avg_weighted_recall': 0.0,
-               'avg_weighted_f_measure': 0.0, 'avg_standard_accuracy': 0.0,
-               'avg_balanced_accuracy': 0.0}
-    # Black magic time!
-    return results
+    
+    confusion_matricies={}
 
+    evaluation_metrics={
+        "macro_precision":[],
+        "macro_recall":[],
+        "macro_f_measure":[],
+        "avg_weighted_precision":[],
+        "avg_weighted_recall":[],
+        "avg_weighted_f_measure":[],
+        "avg_standard_accuracy":[],
+        "avg_balanced_accuracy":[]
+
+    }
+
+# we will store tps, fps and fns in a dictonary with key = key of confusion matrix 
+# and value being array containing the tp,fp and fn for the respective confusion matrix
+    for i in range (0,len(actual_class_list)):
+        actual_class=(actual_class_list[i])
+        predicted_class=(predicted_class_list[i])
+        confusion_matricies[i]=(task_2_evaluation.confusion_matrix(actual_class=actual_class,predicted_class=predicted_class,
+        class_values=class_values))
+
+    for index,matrix in confusion_matricies.items():
+# appends macro precision of each matrix to array associated with value "macro_precision" in evaluation_metrics dictionay
+        evaluation_metrics["macro_precision"].append(task_2_evaluation.compute_macro_precision(matrix))
+# appends macro recall of each matrix to array associated with value "macro_recall" in evaluation_metrics dictionay
+        evaluation_metrics["macro_recall"].append(task_2_evaluation.compute_macro_recall(matrix))
+# appends macro f measure of each matrix to array associated with value "macro_f_measure" in evaluation_metrics dictionay
+        evaluation_metrics["macro_f_measure"].append(task_2_evaluation.compute_macro_f_measure(matrix))
+# appends avarage weighted precision of each matrix to array associated with value "avg_weighted_precision"
+#  in evaluation_metrics dictionay
+        evaluation_metrics["avg_weighted_precision"].append(task_2_evaluation.compute_weighted_precision(matrix))
+# appends avarge weighted recall of each matrix to array associated with value "avg_weighted_recall"
+#  in evaluation_metrics dictionay
+        evaluation_metrics["avg_weighted_recall"].append(task_2_evaluation.compute_weighted_recall(matrix))
+# appends avarage weighted f measure of each matrix to array associated with value "avg_weighted_f_measure"
+#  in evaluation_metrics dictionay
+        evaluation_metrics["avg_weighted_f_measure"].append(task_2_evaluation.compute_weighted_f_measure(matrix))
+# appends avarage standard accuracy of each matrix to array associated with value "avg_standard_accuracy" in
+# evaluation_metrics dictionay
+        evaluation_metrics["avg_standard_accuracy"].append(task_2_evaluation.compute_standard_accuracy(matrix))
+# appends avarage balanced accuracy  of each matrix to array associated with value "avg_balanced_accuracy" in
+#  evaluation_metrics dictionay
+        evaluation_metrics["avg_balanced_accuracy"].append(task_2_evaluation.compute_balanced_accuracy(matrix))
+        
+        
+        
+    avg_macro_precision=sum(evaluation_metrics["macro_precision"])/len(confusion_matricies.keys())
+    avg_macro_recall=sum(evaluation_metrics["macro_recall"])/len(confusion_matricies.keys())
+    avg_macro_f_measure=sum(evaluation_metrics["macro_f_measure"])/len(confusion_matricies.keys())
+    avg_weighted_precision=sum(evaluation_metrics["avg_weighted_precision"])/len(confusion_matricies.keys())
+    avg_weighted_recall=sum(evaluation_metrics["avg_weighted_recall"])/len(confusion_matricies.keys())
+    avg_weighted_f_measure=sum(evaluation_metrics["avg_weighted_f_measure"])/len(confusion_matricies.keys())
+    avg_standard_accuracy=sum(evaluation_metrics["avg_standard_accuracy"])/len(confusion_matricies.keys())
+    avg_balanced_accuracy=sum(evaluation_metrics["avg_balanced_accuracy"])/len(confusion_matricies.keys())
+
+
+    results = {'avg_macro_precision': avg_macro_precision, 'avg_macro_recall': avg_macro_recall,
+                'avg_macro_f_measure': avg_macro_f_measure, 'avg_weighted_precision': avg_weighted_precision,
+                'avg_weighted_recall': avg_weighted_recall, 'avg_weighted_f_measure': avg_weighted_f_measure,
+                'avg_standard_accuracy': avg_standard_accuracy, 'avg_balanced_accuracy': avg_balanced_accuracy}
+    print(results)
+    
+    return results
 
 # In this task you are expected to perform and evaluate cross-validation on a given dataset.
 # You are expected to partition the input dataset into f partitions, then arrange them into training and testing
