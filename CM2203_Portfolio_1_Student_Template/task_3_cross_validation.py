@@ -20,10 +20,11 @@ from task_1_naive_bayes import *
 def partition_data(training_data: pd.DataFrame, f: int) -> list[pd.DataFrame]:
 
     if (f<=0):
-        return "f value must be an integer >0"
+        print( "f value must be an integer >0")
+        return []
     elif (f>training_data.shape[0]):
-        return "f value cannot be greater than size of the training data"
-    
+        print("f value cannot be greater than size of the training data")
+        return[]
     trainingDataSize=training_data.shape[0]
     
     partitionSize=trainingDataSize//f
@@ -39,6 +40,7 @@ def partition_data(training_data: pd.DataFrame, f: int) -> list[pd.DataFrame]:
         start+=size
 
     return partition_list
+
 
 
 # This function transforms partitions into training and testing data for each cross-validation round (there are
@@ -57,15 +59,48 @@ def partition_data(training_data: pd.DataFrame, f: int) -> list[pd.DataFrame]:
 
 def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
         -> list[tuple[int, pd.DataFrame, pd.DataFrame]]:
+    
     # This is just for error handling, if for some magical reason f and number of partitions are not the same,
     # then something must have gone wrong in the other functions and you should investigate it
     if len(partition_list) != f:
         print("Something went really wrong! Why is the number of partitions different from f??")
         return []
+    # index 0 = round number (starts with 0), index 1 = training data for that round, index 2 = testing data for that round
+    # for each of the f sets, train a classifier where that set becomes testing data and the non-picked sets become training datad
+    
     folds = []
+
+    for index, partition in enumerate(partition_list):
+        # selects the trainingdata as the current partition in the iteration
+        trainingdata=partition
+# constructs an array of two dataframes for testingdata, dataframes are all other partitions in the partitionlist that
+# are'nt the partition for the treaining data
+        testingdata_dataframes=[pd.DataFrame(df) for testindex ,df in enumerate(partition_list) if index != testindex]
+    
+    # retrevies the columns to use to construct a new dataframe for the testingdata dataframe
+    testingdata_cols = list(testingdata_dataframes[0].columns)
+    # array to store the index values of the testing data
+    testingdata_indexvalues =[]
+    # array to store individual records in the testing data
+    testingdata_list=[]
+
+    for testdata in testingdata_dataframes:
+    
+        for index in testdata.index:
+    # appends the index of each record in the testingdata_dataframes which will be used to construct the new testingdata dataframe 
+            testingdata_indexvalues.append(index)
+        for values in testdata.values:
+    # appends all values of the individual records to an array which will be used to constuct the new testingdata dataframe
+            testingdata_list.append(list(values))
+# construct a new dataframe for the testingdata 
+    testingdata_df=pd.DataFrame(data=testingdata_list,index=testingdata_indexvalues,columns=testingdata_cols)
+     
+    index+=1
+    index=str("0"+str(index))
+    
+    # INCOMPLETE must work on folds 
     # Do your thing!
     return folds
-
 
 # This function takes the lists of actual and predicted classes for each round, and produces averaged metrics.
 # Invoke either the Task 2 evaluation here; do not do everything from scratch!

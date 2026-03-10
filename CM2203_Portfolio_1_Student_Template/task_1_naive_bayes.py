@@ -113,9 +113,10 @@ class NaiveBayes:
     # The function outputs:
     # - probability - float representing the probability of the given class value
     def retrieve_class_probability(self, class_value: str) -> float:
-        if not(self.trainingTookPlace):
+        if (not(self.trainingTookPlace) or (class_value not in self.class_probabilities.keys()) ):
             return 0;
-        return self.class_probabilities[class_value]
+        else:
+            return self.class_probabilities[class_value]
 
     # The function returns the conditional probably of a feature value assuming a given class value. You can assume
     # that this function simply retrieves the desired probability after training rather than
@@ -128,13 +129,15 @@ class NaiveBayes:
     # - probability - float representing the calculated conditional probability
     #
     def retrieve_conditional_probability(self, class_value: str, feature_name: str, feature_value: str) -> float:
-        
-        if not (self.trainingTookPlace):
+# checks if training hasn't taken place or a given feature value isnt associated with a given feature name -> return 0
+        if  (not(self.trainingTookPlace)or (feature_value not in self.feature_info[feature_name])):
             return 0;
         else:
+# retrieves the index of the feature value in the array associated with the feature name key in the feature info dictionary  
             featureValueIndex=self.feature_info[feature_name].index(feature_value)
+# retrieves the probabilities associated with the feature values of a given feature name given a class value 
             featureProbabilities=self.attribute_probabilities[class_value][feature_name]
+# retreives the feature value probability through using the index of the given feature value in the array associated with a feature name 
             featureValueProbability=featureProbabilities[featureValueIndex]
-
 
             return featureValueProbability
