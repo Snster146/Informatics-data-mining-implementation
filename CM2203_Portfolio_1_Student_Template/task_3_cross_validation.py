@@ -18,25 +18,30 @@ from task_1_naive_bayes import *
 #                     same name whatever partition it is in. The column and row names in the partition must be the same
 #                     as in training_data.
 def partition_data(training_data: pd.DataFrame, f: int) -> list[pd.DataFrame]:
-
+# error handling ensure that the number of folds is greater than 0
     if (f<=0):
         print( "f value must be an integer >0")
         return []
+    # error handling ensure number of folds isn't greater than size of training data
     elif (f>training_data.shape[0]):
         print("f value cannot be greater than size of the training data")
         return[]
     trainingDataSize=training_data.shape[0]
-    
+    # rereives integer size of partion
     partitionSize=trainingDataSize//f
-
+# retreives remainder size of partiton if training data cannot be split into equal sized partitions 
     partitionRemainder = trainingDataSize%f
     
     partition_list=[]
 
     start=0
+
     for i in range (f):
+        # changes size based on remeinder 
         size =partitionSize+(1 if i<partitionRemainder else 0)
+        # appends the partition of trainig data to the partition_list array
         partition_list.append(training_data.iloc[start:start+size])
+        # recalculates start for the index of the beginning of the next partition
         start+=size
 
     return partition_list
@@ -119,7 +124,6 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
 def evaluate_results(actual_class_list: list[pd.Series], predicted_class_list: list[pd.Series],
                      class_values: list[str]) -> dict[str, float]:
     
-    print(predicted_class_list)
     confusion_matricies={}
 
     evaluation_metrics={
@@ -164,9 +168,7 @@ def evaluate_results(actual_class_list: list[pd.Series], predicted_class_list: l
 # appends avarage balanced accuracy  of each matrix to array associated with value "avg_balanced_accuracy" in
 #  evaluation_metrics dictionay
         evaluation_metrics["avg_balanced_accuracy"].append(task_2_evaluation.compute_balanced_accuracy(matrix))
-        
-        
-        
+          
     avg_macro_precision=sum(evaluation_metrics["macro_precision"])/len(confusion_matricies.keys())
     avg_macro_recall=sum(evaluation_metrics["macro_recall"])/len(confusion_matricies.keys())
     avg_macro_f_measure=sum(evaluation_metrics["macro_f_measure"])/len(confusion_matricies.keys())
@@ -211,39 +213,48 @@ def cross_validate(nb: NaiveBayes, training_data: pd.DataFrame, f: int,
                    partition_func=partition_data, prep_func=arrange_data_for_cv, eval_func=evaluate_results) \
         -> tuple[pd.DataFrame, dict[str, float]]:
     
-    actual_class_list=nb.class_info[1]
-    class_values=nb.feature_info
-    
-    
+    class_column=nb.class_info[0]    
+
     # contains array of partitions 
     partition_list=partition_func(training_data,f)
     # contains array of tuples containing (roundnumber,trainingdata,testingdata)
     folds=prep_func(partition_list,f)
 
-    predictions={}
+    predicted_classes = []
+    actual_class_list = []
+# creates pandas series for fold and predicted columns which will be added to training_data with predictedclass and roundnumber
+    predicted_col=pd.Series(index=training_data.index,dtype="object")
+    roundnum_col=pd.Series(index=training_data.index,dtype="str")
 
-
-
-    for fold in folds:
-        training_dataFrame=fold[1]
-        testingdata_dataFrame=(fold[2])
-
-        nb.train_model(training_data=training_dataFrame)
-        predicted=(nb.predict(testing_data=testingdata_dataFrame))
-        predictions[fold[0]]=predicted
-
+    for roundnum,training_df,testing_df in folds:
         
+        nb.train_model(training_data=training_df)
+        predictions=(nb.predict(testing_data=testing_df))
+# access column Predicted class from returned dataframe stored in predictions variable
+        predictions_series=predictions["PredictedClass"]
+# append the "PredictedClass" column from the returned data frame to the array which will be passed to the evaluation function
+        predicted_classes.append(predictions_series)
+# retreives the actual class column ('target/class') form the testing data frame in the fold 
+        actual_class_series=testing_df[class_column]
+# appends the actual class column to an aray which will be passed to the evaluation function
+        actual_class_list.append(actual_class_series)
+# appends the values in the predicted class series to the predicted_col series which will be appended to the output dataset
+        predicted_col.loc[testing_df.index]=predictions_series.values
+# appends the round number to the roundnum_col series which will be appended to the output dataset
+        roundnum_col.loc[testing_df.index]=roundnum
+
+#create a copy of the training data which will be used for the output dataset which will contain PredictedClass and Fold columns 
+    output_dataset = training_data.copy()
+# add a "PredictedClass" column to the output data frame set it to the predictedClass series stored in predicted_col
+    output_dataset["PredictedClass"]=predicted_col
+# add a "Fold" column to the output data frame set it to the round number series stored in roundnum_col
+    output_dataset["Fold"]=roundnum_col
+# evaluate using the actual classes , predicted classes and class values
+    evaluation = eval_func(
+        actual_class_list=actual_class_list,
+        predicted_class_list=predicted_classes,
+        class_values=nb.class_info[1]
+    )
+# returns the output dataset and a dictionary containing evaluation metrics
+    return output_dataset,evaluation
     
-    predicted_classes=[]
-    fold_attribute=[]
-    for roundnum,testingdata in predictions.items():
-        for i in range (0,(testingdata.shape[0])):
-            predicted_classes.append(testingdata.iloc[i]["PredictedClass"])
-            fold_attribute.append(roundnum)
-
-    training_data["PredictedClass"]=predicted_classes
-    training_data["Fold"]=fold_attribute
-
-    output_dataset = None
-
-    return output_dataset, {}
