@@ -232,8 +232,18 @@ def cross_validate(nb: NaiveBayes, training_data: pd.DataFrame, f: int,
         predicted=(nb.predict(testing_data=testingdata_dataFrame))
         predictions[fold[0]]=predicted
 
-
         
+    
+    predicted_classes=[]
+    fold_attribute=[]
+    for roundnum,testingdata in predictions.items():
+        for i in range (0,(testingdata.shape[0])):
+            predicted_classes.append(testingdata.iloc[i]["PredictedClass"])
+            fold_attribute.append(roundnum)
+
+    training_data["PredictedClass"]=predicted_classes
+    training_data["Fold"]=fold_attribute
+
     output_dataset = None
 
     return output_dataset, {}
