@@ -72,31 +72,29 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
 
     for index, partition in enumerate(partition_list):
         
-
         # selects the trainingdata as the current partition in the iteration
-        trainingdata=partition
+        testingdata=partition
 # constructs an array of two dataframes for testingdata, dataframes are all other partitions in the partitionlist that
 # are'nt the partition for the treaining data
-        testingdata_dataframes=[pd.DataFrame(df) for testindex ,df in enumerate(partition_list) if index != testindex]
+        traingdata_dataframes=[pd.DataFrame(df) for testindex ,df in enumerate(partition_list) if index != testindex]
     
     # retrevies the columns to use to construct a new dataframe for the testingdata dataframe
-        testingdata_cols = list(testingdata_dataframes[0].columns)
+        trainingdata_cols = list(traingdata_dataframes[0].columns)
     # array to store the index values of the testing data
-        testingdata_indexvalues =[]
+        trainingdata_indexvalues =[]
     # array to store individual records in the testing data
-        testingdata_list=[]
+        trainingdata_list=[]
         roundnumber=index+1
         roundnumber=str("0"+str(roundnumber))
-        for index,testdata in enumerate(testingdata_dataframes):
-    
-            for index in testdata.index:
+        for index,trainingdata in enumerate(traingdata_dataframes):
+            for index in trainingdata.index:
     # appends the index of each record in the testingdata_dataframes which will be used to construct the new testingdata dataframe 
-                testingdata_indexvalues.append(index)
-            for values in testdata.values:
+                trainingdata_indexvalues.append(index)
+            for values in trainingdata.values:
     # appends all values of the individual records to an array which will be used to constuct the new testingdata dataframe
-                testingdata_list.append(list(values))
+                trainingdata_list.append(list(values))
 # construct a new dataframe for the testingdata 
-            testingdata=pd.DataFrame(data=testingdata_list,index=testingdata_indexvalues,columns=testingdata_cols)
+            trainingdata=pd.DataFrame(data=trainingdata_list,index=trainingdata_indexvalues,columns=trainingdata_cols)
      
 # given that we now have the training data and testing data and index must format this to be returned
         currentfold=tuple([roundnumber,trainingdata,testingdata])
@@ -121,6 +119,7 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
 def evaluate_results(actual_class_list: list[pd.Series], predicted_class_list: list[pd.Series],
                      class_values: list[str]) -> dict[str, float]:
     
+    print(predicted_class_list)
     confusion_matricies={}
 
     evaluation_metrics={
@@ -211,32 +210,30 @@ def evaluate_results(actual_class_list: list[pd.Series], predicted_class_list: l
 def cross_validate(nb: NaiveBayes, training_data: pd.DataFrame, f: int,
                    partition_func=partition_data, prep_func=arrange_data_for_cv, eval_func=evaluate_results) \
         -> tuple[pd.DataFrame, dict[str, float]]:
+    
+    actual_class_list=nb.class_info[1]
+    class_values=nb.feature_info
+    
+    
     # contains array of partitions 
     partition_list=partition_func(training_data,f)
     # contains array of tuples containing (roundnumber,trainingdata,testingdata)
-    folds=arrange_data_for_cv(partition_list,f)
-    
-    print(training_data.shape[0])
-    print(f)
-    print(training_data.shape[0]/f)
-    print(len(partition_list))
-    print(len(folds))
+    folds=prep_func(partition_list,f)
 
-    for roundnum,tra,tes in folds:
-        print(roundnum)
+    predictions={}
 
-    '''
+
+
     for fold in folds:
-
         training_dataFrame=fold[1]
         testingdata_dataFrame=(fold[2])
 
-        print(training_dataFrame)
-        print("&"*400)
-        # nb.train_model(nb,training_dataFrame)
-        # nb.predict(nb,testingdata_dataFrame)
-    ''' 
+        nb.train_model(training_data=training_dataFrame)
+        predicted=(nb.predict(testing_data=testingdata_dataFrame))
+        predictions[fold[0]]=predicted
 
+
+        
     output_dataset = None
 
     return output_dataset, {}
