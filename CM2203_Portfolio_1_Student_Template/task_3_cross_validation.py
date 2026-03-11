@@ -99,8 +99,8 @@ def arrange_data_for_cv(partition_list: list[pd.DataFrame], f: int) \
             testingdata=pd.DataFrame(data=testingdata_list,index=testingdata_indexvalues,columns=testingdata_cols)
      
 # given that we now have the training data and testing data and index must format this to be returned
-            currentfold=tuple([roundnumber,trainingdata,testdata])
-            folds.append(currentfold)
+        currentfold=tuple([roundnumber,trainingdata,testingdata])
+        folds.append(currentfold)
     # Do your thing!
     return folds
 
@@ -211,6 +211,32 @@ def evaluate_results(actual_class_list: list[pd.Series], predicted_class_list: l
 def cross_validate(nb: NaiveBayes, training_data: pd.DataFrame, f: int,
                    partition_func=partition_data, prep_func=arrange_data_for_cv, eval_func=evaluate_results) \
         -> tuple[pd.DataFrame, dict[str, float]]:
+    # contains array of partitions 
+    partition_list=partition_func(training_data,f)
+    # contains array of tuples containing (roundnumber,trainingdata,testingdata)
+    folds=arrange_data_for_cv(partition_list,f)
+    
+    print(training_data.shape[0])
+    print(f)
+    print(training_data.shape[0]/f)
+    print(len(partition_list))
+    print(len(folds))
+
+    for roundnum,tra,tes in folds:
+        print(roundnum)
+
+    '''
+    for fold in folds:
+
+        training_dataFrame=fold[1]
+        testingdata_dataFrame=(fold[2])
+
+        print(training_dataFrame)
+        print("&"*400)
+        # nb.train_model(nb,training_dataFrame)
+        # nb.predict(nb,testingdata_dataFrame)
+    ''' 
+
     output_dataset = None
 
     return output_dataset, {}
